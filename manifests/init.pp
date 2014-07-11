@@ -1,6 +1,6 @@
 class grafana (
     $version            = $grafana::params::version,
-    $download_url       = "http://grafanarel.s3.amazonaws.com/grafana-${version}.tar.gz",
+    $download_url       = "https://github.com/grafana/grafana/archive/v${version}.tar.gz",
     $install_dir        = $grafana::params::install_dir,
     $symlink            = $grafana::params::symlink,
     $symlink_name       = $grafana::params::symlink_name,
@@ -17,13 +17,14 @@ class grafana (
     $influxdb_dbname    = $grafana::params::influxdb_dbname,
 ) inherits grafana::params {
     archive { "grafana-${version}":
-        ensure      => present,
-        url         => $download_url,
-        target      => $install_dir,
-        checksum    => false,
+        ensure           => present,
+        url              => $download_url,
+        target           => $install_dir,
+        follow_redirects => true,
+        checksum         => false,
     }
 
-    file { "${install_dir}/grafana-${version}/config.js":
+    file { "${install_dir}/grafana-${version}/src/config.js":
         ensure  => present,
         content => template('grafana/config.js.erb'),
         owner   => $grafana_user,
@@ -37,5 +38,20 @@ class grafana (
             target  => "${install_dir}/grafana-${version}",
             require => Archive["grafana-${version}"],
         }
+    }
+
+    $list = query_nodes('Class[collectd]')
+
+    #$filtered_list = inline_template('<%= @list.map {|server| server.gsub!(".","_") } %>')
+
+    notify{"list ${list} ": }
+    #notify{"filtered_list ${filtered_list}": }
+
+    file { "${install_dir}/grafana-${version}/src/app/dashboards/default.json": 
+        ensure => present,
+        content => template('grafana/default.json.erb'),
+        owner => $grafana_user,
+        group => $grafana_group,
+        require => Archive["grafana-${version}"],
     }
 }
