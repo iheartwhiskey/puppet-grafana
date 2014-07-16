@@ -13,7 +13,11 @@ function (Settings) {
     datasources: {
       graphite: {
         type: 'graphite',
-        url: "/",
+        <% if @graphite_host && @graphite_host.length > 0 -%>
+            url: "http://<%= @graphite_host %>:<%= @graphite_port %>",
+        <% else -%>
+            url: "",
+        <% end -%>
         default: true
       },
       influxdb: {

@@ -42,11 +42,6 @@ class grafana (
 
     $list = query_nodes('Class[collectd]')
 
-    #$filtered_list = inline_template('<%= @list.map {|server| server.gsub!(".","_") } %>')
-
-    notify{"list ${list} ": }
-    #notify{"filtered_list ${filtered_list}": }
-
     file { "${install_dir}/grafana-${version}/src/app/dashboards/default.json": 
         ensure => present,
         content => template('grafana/default.json.erb'),
